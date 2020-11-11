@@ -1,0 +1,15 @@
+---
+- name: Installing PostgreSQL if it absent.
+  dnf:
+    name: "{{ postgresql_module }}"
+    state: present
+
+- name: Installing additional PostgreSQL packets.
+  dnf:
+    name: "{{ postgresql_additional_packets }}"
+    state: present
+
+- name: Installing Python library.
+  dnf:
+    name: "{{ postgresql_python_library }}"
+    state: present
