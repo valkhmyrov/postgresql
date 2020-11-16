@@ -1,10 +1,10 @@
 ---
-- name: Configure global settings.
+- name: Configuring global settings.
   lineinfile:
-    dest: "{{ postgresql_config_path }}/postgresql.conf"
+    dest: "{{ postgresql_data_dir }}/postgresql.conf"
     regexp: "^#?{{ item.option }}.+$"
     line: "{{ item.option }} = '{{ item.value }}'"
-    state: "{{ item.state | default('present') }}"
+    state: present
   with_items: "{{ postgresql_global_config_options }}"
   notify: restart postgresql
 

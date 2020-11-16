@@ -1,13 +1,17 @@
 ---
 
-postgresql_restarted_state: "restarted"
+postgresql_module: '@postgresql:12'
+postgresql_additional_packets:
+  - postgresql-contrib
 
 postgresql_python_library: python3-psycopg2
 
 postgresql_data_dir: /pg_data/data
 postgresql_backup_dir: /pg_backup
 postgresql_wal_dir: /pg_walarchive
+postgresql_home_dir: "{{ postgresql_data_dir | regex_replace('/\\w+$', '') }}"
 postgresql_dirs:
+  - '{{ postgresql_home_dir }}'
   - '{{ postgresql_data_dir }}'
   - '{{ postgresql_backup_dir }}'
   - '{{ postgresql_wal_dir }}'
@@ -15,16 +19,45 @@ postgresql_dirs:
 postgresql_user: postgres
 postgresql_group: postgres
 
+postgresql_unix_socket_directories_mode: '0755'
 postgresql_unix_socket_directories:
   - /var/run/postgresql
 
+# restarted or reloaded
+postgresql_restarted_state: 'restarted'
 postgresql_service_state: started
 postgresql_service_enabled: true
 
 # Global configuration options that will be set in postgresql.conf.
+# wal_keep_segments: work db - 512, test db - 8 
+wal_keep_segments: 8
 postgresql_global_config_options:
   - option: unix_socket_directories
     value: '{{ postgresql_unix_socket_directories | join(",") }}'
+  - option: listen_addresses
+    value: '*'
+  - option: shared_buffers
+    value: '{{ (ansible_memtotal_mb / 4) | int }}MB'
+  - option: work_mem
+    value: '16MB'
+  - option: maintenance_work_mem
+    value: '128MB'
+  - option: effective_io_concurrency
+    value: '200'
+  - option: max_wal_size
+    value: '6GB'
+  - option: wal_keep_segments
+    value: '{{ wal_keep_segments }}'
+  - option: log_line_prefix
+    value: '%t [%p]: db=%d,user=%u,app=%a,client=%h'
+  - option: autovacuum_vacuum_scale_factor
+    value: 0.05
+  - option: autovacuum_analyze_scale_factor
+    value: 0.01
+  - option: default_transaction_isolation
+    value: 'repeatable read'
+  - option: shared_preload_libraries
+    value: 'pg_stat_statements'
 
 # Host based authentication (hba) entries to be added to the pg_hba.conf. This
 # variable's defaults reflect the defaults that come with a fresh installation.

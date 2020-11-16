@@ -9,7 +9,10 @@
 - import_tasks: initialize.yml
   become: yes
 
-#- include_tasks: configure.yml
+# Configuring PostgreSQL
+- import_tasks: configure.yml
+  become: yes
+  become_user: "{{ postgresql_user }}"
 
 #- name: Ensure PostgreSQL is started and enabled on boot.
 #  service:

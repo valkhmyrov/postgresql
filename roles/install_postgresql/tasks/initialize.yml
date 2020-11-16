@@ -4,30 +4,42 @@
     src: postgres.sh.j2
     dest: /etc/profile.d/postgres.sh
     mode: 0644
-  #notify: restart postgresql
+  notify: restart postgresql
 
-- name: Creating data directory.
+- name: Creating systemd override directories if it does not exists.
+  file:
+    path: /etc/systemd/system/postgresql.service.d
+    owner: root
+    group: root
+    state: directory
+    mode: 0755
+
+- name: Setting PostgreSQL systemd overrides.
+  template:
+    src: override.conf.j2
+    dest: /etc/systemd/system/postgresql.service.d/override.conf
+    mode: 0644
+
+- name: Creating directories if it does not exists.
   file:
     path: "{{ item }}"
     owner: "{{ postgresql_user }}"
     group: "{{ postgresql_group }}"
     state: directory
-    mode: 0755
+    mode: 0750
   loop: "{{ postgresql_dirs|flatten(levels=1) }}"
+
+- name: Changing home directory for user.
+  user:
+    name: "{{ postgresql_user }}"
+    home: "{{ postgresql_data_dir | regex_replace('/\\w+$', '') }}"
 
 - name: Checking if PostgreSQL database is initialized.
   stat:
     path: "{{ postgresql_data_dir }}/PG_VERSION"
   register: pgdata_dir_version
 
-- debug:
-    var: pgdata_dir_version
-
-#- name: Ensure PostgreSQL database is initialized.
-#  command: "{{ postgresql_bin_path }}/initdb -D {{ postgresql_data_dir }}"
-#  when: not pgdata_dir_version.stat.exists
-#  become: true
-#  become_user: "{{ postgresql_user }}"
-  # See: https://github.com/ansible/ansible/issues/16048#issuecomment-229012509
-#  vars:
-#    ansible_ssh_pipelining: true
+- name: Initializing PostgreSQL database.
+  command: "initdb -D {{ postgresql_data_dir }} --data-checksums"
+  when: not pgdata_dir_version.stat.exists
+  become_user: "{{ postgresql_user }}"
