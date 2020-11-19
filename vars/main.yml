@@ -1,5 +1,5 @@
 postgresql_databases:
   - name: example_db
-postgresql_users:
-  - name: example_user
-    password: supersecure
+#postgresql_users:
+#  - name: example_user
+#    password: supersecure
