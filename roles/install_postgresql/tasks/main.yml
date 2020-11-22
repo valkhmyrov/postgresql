@@ -1,14 +1,15 @@
 ---
 
-# Installing PostgreSQL
-- import_tasks: install.yml
+# Install PostgreSQL
+- include_tasks: install.yml
   when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8'
 
-# Initializing PostgreSQL
-- import_tasks: initialize.yml
+# Initialize PostgreSQL
+- include_tasks: initialize.yml
+  when: ansible_os_family == 'RedHat' and ansible_distribution_major_version == '8'
 
-# Configuring PostgreSQL
-- import_tasks: configure.yml
+# Configure PostgreSQL
+- include_tasks: configure.yml
 
 - name: Set enabled|disabled for service.
   service:
@@ -16,6 +17,11 @@
     state: "{{ postgresql_service_state }}"
     enabled: "{{ postgresql_service_enabled }}"
 
-# Configure PostgreSQL.
-#- import_tasks: users.yml
-#- import_tasks: databases.yml
+# Create users.
+- include_tasks: users.yml
+
+# Create dbs.
+- include_tasks: databases.yml
+
+# Set privileges.
+#- include_tasks: privileges.yml
